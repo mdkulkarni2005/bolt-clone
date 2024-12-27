@@ -1,25 +1,30 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from '../config/axios.js';
 
 const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const submitHandler = (e) => {
         e.preventDefault();
-        // Handle Register logic here
-        console.log('Email:', email);
-        console.log('Password:', password);
-        // Navigate to dashboard or home page after successful Register
-        navigate('/dashboard');
+        axios.post('/users/register', {
+            email,
+            password
+        }).then((res) => {
+            console.log(res.data);
+            navigate('/');
+        }).catch((err) => {
+            console.log(err.response.data);
+        });
     };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-900">
             <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
                 <h2 className="text-2xl font-bold text-white mb-6">Register</h2>
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={submitHandler}>
                     <div className="mb-4">
                         <label className="block text-gray-400 mb-2" htmlFor="email">Email</label>
                         <input
