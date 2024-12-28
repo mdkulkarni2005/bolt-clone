@@ -11,9 +11,10 @@ router.post('/create',
     body('name').isString().withMessage('Name is required'),
     projectController.createProject
 )
+
 router.get('/all',
     authMiddleWare.authUser,
-    projectController.getAllProjects
+    projectController.getAllProject
 )
 
 router.put('/add-user',
@@ -23,5 +24,11 @@ router.put('/add-user',
         .custom((users) => users.every(user => typeof user === 'string')).withMessage('Each user must be a string'),
     projectController.addUserToProject
 )
+
+router.get('/get-project/:projectId',
+    authMiddleWare.authUser,
+    projectController.getProjectById
+)
+
 
 export default router;
