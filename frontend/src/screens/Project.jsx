@@ -40,6 +40,19 @@ const Project = () => {
     const [ users, setUsers ] = useState([])
     const [ messages, setMessages ] = useState([]) // New state variable for messages
 
+    const [ fileTree, setFileTree ] = useState({
+        "app.js": {
+            content: `const express = require('express');`
+        },
+        "package.json": {
+            content: `{
+                        "name": "temp-server",
+                        }`
+        }
+    })
+    const [ currentFile, setCurrentFile ] = useState(null)
+    const [ openFiles, setOpenFiles ] = useState([])
+
     const handleUserClick = (id) => {
         setSelectedUserId(prevSelectedUserId => {
             const newSelectedUserId = new Set(prevSelectedUserId);
@@ -80,6 +93,25 @@ const Project = () => {
         setMessages(prevMessages => [ ...prevMessages, { sender: user, message } ]) // Update messages state
         setMessage("")
 
+    }
+
+    function WriteAiMessage(message) {
+
+        const messageObject = JSON.parse(message)
+
+        return (
+            <div
+                className='overflow-auto bg-slate-950 text-white rounded-sm p-2'
+            >
+                <Markdown
+                    children={messageObject.text}
+                    options={{
+                        overrides: {
+                            code: SyntaxHighlightedCode,
+                        },
+                    }}
+                />
+            </div>)
     }
 
     useEffect(() => {
@@ -136,23 +168,11 @@ const Project = () => {
                         ref={messageBox}
                         className="message-box p-1 flex-grow flex flex-col gap-1 overflow-auto max-h-full scrollbar-hide">
                         {messages.map((msg, index) => (
-                            <div key={index} className={`${msg.sender._id === 'ai' ? 'max-w-80' : 'max-w-54'} ${msg.sender._id == user._id.toString()&&'ml-auto'}  message flex flex-col p-2 bg-slate-50 w-fit rounded-md`}>
+                            <div key={index} className={`${msg.sender._id === 'ai' ? 'max-w-80' : 'max-w-54'} ${msg.sender._id == user._id.toString() && 'ml-auto'}  message flex flex-col p-2 bg-slate-50 w-fit rounded-md`}>
                                 <small className='opacity-65 text-xs'>{msg.sender.email}</small>
                                 <p className='text-sm'>
                                     {msg.sender._id === 'ai' ?
-
-                                        <div
-                                            className='overflow-auto bg-slate-950 text-white rounded-sm p-2'
-                                        >
-                                            <Markdown
-                                                children={msg.message}
-                                                options={{
-                                                    overrides: {
-                                                        code: SyntaxHighlightedCode,
-                                                    },
-                                                }}
-                                            />
-                                        </div>
+                                        WriteAiMessage(msg.message)
                                         : msg.message}
                                 </p>
                             </div>
@@ -199,6 +219,62 @@ const Project = () => {
                     </div>
                 </div>
             </section>
+            
+            <section className="right bg-red-50 flex-grow h-full flex">
+                <div className="explorer h-full max-w-64 min-w-52 bg-slate-200">
+                    <div className="file-tree w-full">
+                        {
+                            Object.keys(fileTree).map((file, index) => (
+                                <button
+                                    onClick={() => {
+                                        setCurrentFile(file)
+                                        setOpenFiles([ ...new Set([ ...openFiles, file ]) ])
+                                    }}
+                                    className="tree-element cursor-pointer p-2 px-4 flex items-center gap-2 bg-slate-300 w-full">
+                                    <p
+                                        className='font-semibold text-lg'
+                                    >{file}</p>
+                                </button>))
+                        }
+                    </div>
+                </div>
+                {currentFile && (
+                    <div className="code-editor flex flex-col flex-grow h-full">
+                        <div className="top flex">
+                            {
+                                openFiles.map((file, index) => (
+                                    <button
+                                        onClick={() => setCurrentFile(file)}
+                                        className={`open-file cursor-pointer p-2 px-4 flex items-center w-fit gap-2 bg-slate-300 ${currentFile === file ? 'bg-slate-400' : ''}`}>
+                                        <p
+                                            className='font-semibold text-lg'
+                                        >{file}</p>
+                                    </button>
+                                ))
+                            }
+                        </div>
+                        <div className="bottom flex flex-grow">
+                            {
+                                fileTree[ currentFile ] && (
+                                    <textarea
+                                        value={fileTree[ currentFile ].content}
+                                        onChange={(e) => {
+                                            setFileTree({
+                                                ...fileTree,
+                                                [ currentFile ]: {
+                                                    content: e.target.value
+                                                }
+                                            })
+                                        }}
+                                        className='w-full h-full p-4 bg-slate-50 outline-none border-none'
+                                    ></textarea>
+                                )
+                            }
+                        </div>
+                    </div>
+                )}
+            </section>
+
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <div className="bg-white p-4 rounded-md w-96 max-w-full relative">
